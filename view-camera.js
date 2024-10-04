@@ -1,5 +1,4 @@
 let currentStream = null;
-let usingRearCamera = false;  // Track whether we're using the rear camera
 
 document.addEventListener('readystatechange', (event) => {
 
@@ -34,12 +33,12 @@ document.addEventListener('readystatechange', (event) => {
       }
     }
 
-    // Get the video stream based on the facingMode (front or rear camera)
-    function getCameraStream(facingMode) {
+    // Request video stream from the rear camera (facingMode: "environment")
+    function getRearCameraStream() {
       const constraints = {
         audio: false,
         video: {
-          facingMode: { exact: facingMode }  // Use "user" for front, "environment" for rear
+          facingMode: { exact: 'environment' }  // Request the rear camera
         }
       };
 
@@ -48,25 +47,9 @@ document.addEventListener('readystatechange', (event) => {
         .catch(errorCallback);
     }
 
-    // Initially, use the front camera ("user" facingMode)
-    getCameraStream('user');
+    // Initially, request the rear camera stream
+    getRearCameraStream();
 
-    // Switch cameras when the video element is double-clicked
-    video.addEventListener('dblclick', event => {
-      if (location.href.includes('&debug')) {
-        console.log('Switching cameras');
-        console.log('Current stream:', currentStream);
-      }
-
-      // Stop the current stream's tracks before switching
-      stopCurrentStream();
-
-      // Toggle between front (user) and rear (environment) camera
-      usingRearCamera = !usingRearCamera;
-      const facingMode = usingRearCamera ? 'environment' : 'user';
-
-      // Request a new stream using the selected camera (front or rear)
-      getCameraStream(facingMode);
-    });
   }
+
 });
