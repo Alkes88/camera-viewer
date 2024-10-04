@@ -33,12 +33,12 @@ document.addEventListener('readystatechange', (event) => {
       }
     }
 
-    // Request video stream from the rear camera (facingMode: "environment")
-    function getRearCameraStream() {
+    // Request video stream from the rear camera using deviceId
+    function getCameraStream(deviceId) {
       const constraints = {
         audio: false,
         video: {
-          facingMode: { exact: 'environment' }  // Request the rear camera
+          deviceId: { exact: deviceId }  // Request the specific camera by deviceId
         }
       };
 
@@ -47,8 +47,40 @@ document.addEventListener('readystatechange', (event) => {
         .catch(errorCallback);
     }
 
-    // Initially, request the rear camera stream
-    getRearCameraStream();
+    // Enumerate all media devices and find the rear camera
+    function findRearCamera() {
+      navigator.mediaDevices.enumerateDevices()
+        .then(devices => {
+          const videoDevices = devices.filter(device => device.kind === 'videoinput');
+          if (location.href.includes('&debug')) {
+            console.log('Available video devices:', videoDevices);
+          }
+
+          // Look for the rear camera by checking the device label
+          const rearCamera = videoDevices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('rear'));
+
+          if (rearCamera) {
+            // Rear camera found, request stream using its deviceId
+            if (location.href.includes('&debug')) {
+              console.log('Rear camera found:', rearCamera);
+            }
+            getCameraStream(rearCamera.deviceId);
+          } else {
+            // Fallback: if no rear camera is found, alert the user
+            window.alert('Rear camera not found, using the default camera');
+            if (location.href.includes('&debug')) {
+              console.log('Rear camera not found, using default camera');
+            }
+            getCameraStream(videoDevices[0].deviceId);  // Use the first available camera
+          }
+        })
+        .catch(error => {
+          errorCallback(error);
+        });
+    }
+
+    // Initially, try to find and use the rear camera
+    findRearCamera();
 
   }
 
